@@ -1,0 +1,51 @@
+{{ define "hosts.html" }}
+<div class="columns is-multiline">
+  {{ range .Hosts }}
+  {{ $host := .Name }}
+  {{ $addr := .Address }}
+  <div class="column is-6">
+    <div class="card">
+      <header class="card-header">
+        <p class="card-header-title">{{ $host }}</p>
+        <div class="card-header-icon buttons are-small">
+          <button class="button is-light" title="Edit Host" hx-get="/edithost-form" hx-vals='{"host":"{{ $host }}"}' hx-target="#modal" hx-swap="innerHTML">Edit</button>
+        </div>
+      </header>
+      <div class="card-content">
+        <div class="content">
+          <p><strong>Address:</strong> {{ $addr }}</p>
+          <table class="table is-fullwidth is-striped is-narrow">
+            <thead><tr><th>Check</th><th>Status</th><th>Latency</th><th>Last</th><th></th></tr></thead>
+            <tbody>
+              {{ range $i, $c := .Checks }}
+              <tr>
+                <td>{{ if eq $c.Type "http" }}http - {{ $c.URL }}{{ else }}{{ $c.Type }}{{ end }}</td>
+                <td>
+                  {{ if $c.Enabled }}
+                    {{ if $c.CheckedAt.IsZero }}
+                      <span class="tag is-warning">UNKNOWN</span>
+                    {{ else }}
+                      {{ if $c.OK }}<span class="tag is-success">UP</span>{{ else }}<span class="tag is-danger">DOWN</span> <span class="muted">({{ $c.Message }})</span>{{ end }}
+                    {{ end }}
+                  {{ else }}<span class="tag is-light">Disabled</span>{{ end }}
+                </td>
+                <td>{{ if $c.OK }}{{ $c.LatencyMS }}ms{{ end }}</td>
+                <td>{{ if $c.CheckedAt.IsZero }}—{{ else }}{{ $c.CheckedAt.Format "15:04:05" }}{{ end }}</td>
+                <td>
+                  {{ if $c.Enabled }}
+                    <button class="button is-small is-warning is-light" hx-post="/toggle" hx-vals='{"host":"{{ $host }}","idx":"{{ $i }}","enabled":"false"}' hx-target="this" hx-swap="outerHTML">Disable</button>
+                  {{ else }}
+                    <button class="button is-small is-success is-light" hx-post="/toggle" hx-vals='{"host":"{{ $host }}","idx":"{{ $i }}","enabled":"true"}' hx-target="this" hx-swap="outerHTML">Enable</button>
+                  {{ end }}
+                </td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{ end }}
+</div>
+{{ end }}

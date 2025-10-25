@@ -1,0 +1,154 @@
+<div id="hostModal" class="modal" style="display:block;" _="on closeModal add @style='display:none' to me">
+    <div class="modal-content modal-large" _="on click halt the event's bubbling">
+        <span class="close" _="on click trigger closeModal">×</span>
+        <h2>{{.Title}}</h2>
+        <form hx-post="{{.Action}}"
+              hx-target="#hosts-container"
+              hx-swap="innerHTML"
+              _="on htmx:afterRequest trigger closeModal">
+            {{if .Host.Name}}
+            <input type="hidden" name="original_name" value="{{.Host.Name}}">
+            {{end}}
+
+            <div class="form-group">
+                <label for="host_name">Host Name: *</label>
+                <input type="text" name="name" value="{{.Host.Name}}" required placeholder="e.g., Google DNS">
+            </div>
+
+            <div class="form-group">
+                <label for="host_address">Address: *</label>
+                <input type="text" name="address" value="{{.Host.Address}}" required placeholder="e.g., 8.8.8.8 or example.com">
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px;">Health Checks</h3>
+
+            {{range $index, $check := .Host.Checks}}
+            <div class="check-row">
+                <div class="check-row-content">
+                    <div class="form-group">
+                        <label>Type:</label>
+                        <select name="check_type[]" required onchange="toggleHttpOptions(this)">
+                            <option value="ping" {{if eq $check.Type "ping"}}selected{{end}}>Ping</option>
+                            <option value="http" {{if eq $check.Type "http"}}selected{{end}}>HTTP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="check_enabled[]" {{if $check.Enabled}}checked{{end}}>
+                            Enabled
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout (sec):</label>
+                        <input type="number" name="check_timeout[]" value="{{$check.Timeout.Seconds}}" min="1" max="300" required>
+                    </div>
+                    <div class="form-group form-group-wide">
+                        <label>Healthcheck.io URL:</label>
+                        <input type="url" name="check_healthcheck_url[]" value="{{$check.HealthcheckIOURL}}" placeholder="https://hc-ping.com/your-uuid">
+                    </div>
+                    {{if gt (len $.Host.Checks) 1}}
+                    <button type="button" class="btn btn-delete btn-small"
+                            _="on click remove the closest .check-row">
+                        Remove
+                    </button>
+                    {{end}}
+                </div>
+                <div class="check-row-options {{if ne $check.Type "http"}}hidden{{end}}" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>HTTP URL: *</label>
+                        <input type="url" name="check_http_url[]" value="{{index $check.Options "url"}}" placeholder="http://example.com/health" {{if eq $check.Type "http"}}required{{end}}>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Status:</label>
+                        <input type="number" name="check_http_status[]" value="{{if index $check.Options "expected_status"}}{{index $check.Options "expected_status"}}{{else}}200{{end}}" min="100" max="599" placeholder="200" {{if eq $check.Type "http"}}required{{end}}>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+
+            <button type="button" class="btn btn-secondary" style="margin-top: 10px;"
+                    onclick="addCheckRow(this)">
+                + Add Check
+            </button>
+
+            <script>
+            function addCheckRow(button) {
+                const checkRow = document.createElement('div');
+                checkRow.className = 'check-row';
+                checkRow.innerHTML = `
+                    <div class='check-row-content'>
+                        <div class='form-group'>
+                            <label>Type:</label>
+                            <select name='check_type[]' required onchange="toggleHttpOptions(this)">
+                                <option value='ping' selected>Ping</option>
+                                <option value='http'>HTTP</option>
+                            </select>
+                        </div>
+                        <div class='form-group'>
+                            <label><input type='checkbox' name='check_enabled[]' checked> Enabled</label>
+                        </div>
+                        <div class='form-group'>
+                            <label>Timeout (sec):</label>
+                            <input type='number' name='check_timeout[]' value='5' min='1' max='300' required>
+                        </div>
+                        <div class='form-group form-group-wide'>
+                            <label>Healthcheck.io URL:</label>
+                            <input type='url' name='check_healthcheck_url[]' placeholder='https://hc-ping.com/your-uuid'>
+                        </div>
+                        <button type='button' class='btn btn-delete btn-small' onclick="this.closest('.check-row').remove()">Remove</button>
+                    </div>
+                    <div class='check-row-options hidden' style='margin-top: 10px;'>
+                        <div class='form-group'>
+                            <label>HTTP URL: *</label>
+                            <input type='url' name='check_http_url[]' placeholder='http://example.com/health' required>
+                        </div>
+                        <div class='form-group'>
+                            <label>Expected Status:</label>
+                            <input type='number' name='check_http_status[]' value='200' min='100' max='599' placeholder='200' required>
+                        </div>
+                    </div>
+                `;
+                button.parentElement.insertBefore(checkRow, button);
+            }
+
+            function toggleHttpOptions(select) {
+                const checkRow = select.closest('.check-row');
+                const httpOptions = checkRow.querySelector('.check-row-options');
+                const httpInputs = httpOptions.querySelectorAll('input');
+
+                if (select.value === 'http') {
+                    httpOptions.classList.remove('hidden');
+                    // Enable required validation for HTTP fields
+                    httpInputs.forEach(input => {
+                        if (input.name === 'check_http_url[]' || input.name === 'check_http_status[]') {
+                            input.required = true;
+                        }
+                    });
+                } else {
+                    httpOptions.classList.add('hidden');
+                    // Disable required validation for HTTP fields when hidden
+                    httpInputs.forEach(input => {
+                        input.required = false;
+                    });
+                }
+            }
+            </script>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" _="on click trigger closeModal">Cancel</button>
+                {{if .ShowDelete}}
+                <button type="button" class="btn btn-delete" style="margin-right: auto;"
+                        hx-post="/api/host/delete"
+                        hx-vals='{"name": "{{.Host.Name}}"}'
+                        hx-confirm="Are you sure you want to delete this host and all its checks?"
+                        hx-target="#hosts-container"
+                        hx-swap="innerHTML"
+                        _="on htmx:afterRequest trigger closeModal">
+                    Delete Host
+                </button>
+                {{end}}
+            </div>
+        </form>
+    </div>
+</div>

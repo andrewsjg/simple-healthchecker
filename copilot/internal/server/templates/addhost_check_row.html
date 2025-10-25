@@ -1,0 +1,10 @@
+{{ define "addhost_check_row.html" }}
+<div class="added-check tags are-medium" style="align-items: center;">
+  <span class="tag">{{ .Type }}</span>
+  {{ if eq .Type "http" }}<span class="tag is-info is-light">{{ .URL }}</span>{{ end }}
+  <button type="button" class="button is-small is-light" hx-on="click: this.closest('.added-check').remove()">Remove</button>
+  <input type="hidden" name="checks_type" value="{{ .Type }}">
+  <input type="hidden" name="checks_url" value="{{ .URL }}">
+  <input type="hidden" name="checks_expect" value="{{ .Expect }}">
+</div>
+{{ end }}

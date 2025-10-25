@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(go get:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(go version:*)",
+      "Bash(go test:*)",
+      "Bash(./healthchecker:*)",
+      "Bash(tree:*)",
+      "Bash(timeout 5 ./healthchecker:*)",
+      "Bash(timeout 10 ./healthchecker:*)",
+      "Bash(kill:*)",
+      "Bash(timeout 8 ./healthchecker:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(cat:*)",
+      "Bash(go doc:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

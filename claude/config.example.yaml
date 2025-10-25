@@ -1,0 +1,63 @@
+# Health Checker Configuration Example (YAML)
+
+# Interval between health check runs (in seconds)
+check_interval: 60s
+
+# Port for the web UI server
+web_server_port: 8080
+
+# Enable console logging of check results (default: false)
+enable_console_log: true
+
+# List of hosts to monitor
+hosts:
+  - name: "Google DNS"
+    address: "8.8.8.8"
+    checks:
+      - type: "ping"
+        enabled: true
+        timeout: 5s
+        # Optional: Add a unique healthcheck.io URL for this specific check
+        # Sign up at https://healthcheck.io and get your unique URL
+        healthcheck_io_url: "https://hc-ping.com/your-uuid-1"
+
+  - name: "Cloudflare DNS"
+    address: "1.1.1.1"
+    checks:
+      - type: "ping"
+        enabled: true
+        timeout: 5s
+        healthcheck_io_url: "https://hc-ping.com/your-uuid-2"
+
+  - name: "Local Router"
+    address: "192.168.1.1"
+    checks:
+      - type: "ping"
+        enabled: true
+        timeout: 3s
+        # No healthcheck_io_url means no notifications for this check
+
+  - name: "Custom Server"
+    address: "example.com"
+    checks:
+      - type: "ping"
+        enabled: false
+        timeout: 5s
+        healthcheck_io_url: "https://hc-ping.com/your-uuid-3"
+      - type: "http"
+        enabled: true
+        timeout: 10s
+        healthcheck_io_url: "https://hc-ping.com/your-uuid-4"
+        options:
+          url: "https://example.com"
+          expected_status: "200"
+
+  - name: "API Endpoint"
+    address: "api.github.com"
+    checks:
+      - type: "http"
+        enabled: true
+        timeout: 10s
+        options:
+          url: "https://api.github.com/status"
+          expected_status: "200"

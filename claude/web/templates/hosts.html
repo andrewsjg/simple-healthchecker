@@ -1,0 +1,78 @@
+<div style="margin-bottom: 20px;">
+    <button class="btn btn-add"
+            hx-get="/api/host/add-form"
+            hx-target="#modal-container"
+            hx-swap="innerHTML">
+        + Add New Host
+    </button>
+</div>
+
+{{range .Hosts}}
+{{$hostName := .Name}}
+<div class="host-card">
+    <div class="host-header">
+        <div>
+            <div class="host-name">{{.Name}}</div>
+            <div class="host-address">{{.Address}}</div>
+        </div>
+        <div class="host-actions">
+            <button class="btn btn-edit"
+                    hx-get="/api/host/edit-form?name={{.Name}}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML">
+                Edit
+            </button>
+        </div>
+    </div>
+    <div class="checks">
+        {{range .Checks}}
+        <div class="check-item {{if not .Enabled}}disabled{{else}}{{if .LastResult}}{{if .LastResult.Success}}success{{else}}failure{{end}}{{end}}{{end}}">
+            <div class="check-info">
+                <div class="check-type">
+                    {{.Type}}{{if eq .Type "http"}}{{if index .Options "url"}} → {{index .Options "url"}}{{end}}{{end}}
+                </div>
+                <div class="check-status">
+                    {{if not .Enabled}}
+                        <span class="status-badge status-disabled">DISABLED</span>
+                    {{else if .LastResult}}
+                        {{if .LastResult.Success}}
+                            <span class="status-badge status-success">✓ {{.LastResult.Message}}</span>
+                        {{else}}
+                            <span class="status-badge status-failure">✗ {{.LastResult.Message}}</span>
+                        {{end}}
+                        <small style="color: #666; margin-left: 8px;">
+                            {{.LastResult.Timestamp.Format "15:04:05"}} ({{.LastResult.Duration.Milliseconds}}ms)
+                        </small>
+                    {{else}}
+                        <span class="status-badge status-disabled">NOT CHECKED YET</span>
+                    {{end}}
+                    <div style="font-size: 0.8em; color: #888; margin-top: 4px;">
+                        Timeout: {{.Timeout.String}}
+                        {{if .HealthcheckIOURL}}| HC.io: ✓{{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="check-actions">
+                {{if .Enabled}}
+                <button class="btn btn-disable"
+                        hx-post="/api/hosts/{{$hostName}}/checks/{{.Type}}/disable"
+                        hx-trigger="click"
+                        hx-target="#hosts-container"
+                        hx-swap="innerHTML">
+                    Disable
+                </button>
+                {{else}}
+                <button class="btn btn-toggle"
+                        hx-post="/api/hosts/{{$hostName}}/checks/{{.Type}}/enable"
+                        hx-trigger="click"
+                        hx-target="#hosts-container"
+                        hx-swap="innerHTML">
+                    Enable
+                </button>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

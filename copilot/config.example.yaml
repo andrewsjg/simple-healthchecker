@@ -1,0 +1,18 @@
+hosts:
+  - name: "router"
+    address: "192.168.1.1"
+    checks:
+      - type: ping
+        enabled: true
+    # Optional: Healthchecks.io ping URL (https://hc-ping.com/<uuid>)
+    # On success we GET <url>, on failure we GET <url>/fail
+    healthchecks_ping_url: "https://hc-ping.com/00000000-0000-0000-0000-000000000000"
+  - name: "example"
+    address: "example.com"
+    checks:
+      - type: ping
+        enabled: true
+      - type: http
+        url: "https://example.com/"
+        expect: 200
+        enabled: true

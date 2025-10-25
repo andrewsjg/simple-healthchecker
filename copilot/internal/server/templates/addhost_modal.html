@@ -1,0 +1,48 @@
+{{ define "addhost_modal.html" }}
+<div class="modal is-active">
+  <div class="modal-background" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Add Host</p>
+      <button class="delete" aria-label="close" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML"></button>
+    </header>
+    <section class="modal-card-body">
+      <form id="addhost-form" hx-post="/addhost" hx-target="#modal" hx-swap="innerHTML" hx-include="#addhost-form">
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control"><input class="input" name="name" placeholder="router" required></div>
+        </div>
+        <div class="field">
+          <label class="label">Address</label>
+          <div class="control"><input class="input" name="address" placeholder="192.168.1.1" required></div>
+        </div>
+        <div class="field">
+          <label class="label">Healthchecks URL (optional)</label>
+          <div class="control"><input class="input" name="hcurl" placeholder="https://hc-ping.com/<uuid>"></div>
+        </div>
+        <hr>
+        <h4 class="subtitle is-6">Checks</h4>
+        <div id="added-checks" class="mb-2"></div>
+        <div class="field is-grouped">
+          <div class="control">
+            <div class="select">
+              <select name="type" hx-get="/check-config" hx-target="#add-check-config" hx-swap="innerHTML">
+                <option value="ping">Ping</option>
+                <option value="http">HTTP</option>
+              </select>
+            </div>
+          </div>
+          <div id="add-check-config" style="display: contents"></div>
+          <div class="control">
+            <button type="button" class="button is-primary" hx-post="/addhost-check-row" hx-include="#addhost-form" hx-target="#added-checks" hx-swap="beforeend">Add check</button>
+          </div>
+        </div>
+      </form>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML">Cancel</button>
+      <button class="button is-primary" hx-post="/addhost" hx-include="#addhost-form" hx-target="#modal" hx-swap="innerHTML">Save</button>
+    </footer>
+  </div>
+</div>
+{{ end }}

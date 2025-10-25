@@ -1,0 +1,86 @@
+{{ define "edithost_modal.html" }}
+<div class="modal is-active">
+  <div class="modal-background" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Edit Host</p>
+      <button class="delete" aria-label="close" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML"></button>
+    </header>
+    <section class="modal-card-body">
+      <form id="edithost-form">
+        <input type="hidden" name="old_name" value="{{ .Name }}">
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control"><input class="input" name="name" value="{{ .Name }}" required></div>
+        </div>
+        <div class="field">
+          <label class="label">Address</label>
+          <div class="control"><input class="input" name="address" value="{{ .Address }}" required></div>
+        </div>
+        <div class="field">
+          <label class="label">healthchecks.io URL (optional) </label>
+          <div class="control has-addons">
+            <input class="input" name="hcurl" value="{{ .HCURL }}" placeholder="https://hc-ping.com/<uuid>">
+          </div>
+        </div>
+      </form>
+      <hr>
+      <h4 class="subtitle is-6">Checks</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>Type</th><th>Config</th><th></th></tr></thead>
+        <tbody>
+          {{ range $i, $c := .Checks }}
+          <tr>
+            <td>{{ $c.Type }}</td>
+            <td>
+              {{ if eq $c.Type "http" }}
+                <div class="field has-addons" style="flex-wrap: nowrap;">
+                  <div class="control is-expanded">
+                    <input class="input" name="url" value="{{ $c.URL }}" placeholder="https://example.com/health">
+                  </div>
+                  <div class="control">
+                    <input class="input" name="expect" type="number" value="{{ $c.Expect }}" min="100" max="599" style="width:7rem" title="Expected status">
+                  </div>
+                </div>
+              {{ else }}
+                <span class="tag is-light">ping</span>
+              {{ end }}
+            </td>
+            <td>
+              <button class="button is-danger is-light is-small" hx-post="/edithost-delcheck" hx-vals='{"host":"{{ $.Name }}","idx":"{{ $i }}"}' hx-target="#modal" hx-swap="innerHTML">Remove</button>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+      <div class="mt-4">
+        <form id="addcheck-form">
+          <div class="field is-grouped">
+            <div class="control">
+              <div class="select">
+                <select name="type" hx-get="/check-config" hx-target="#check-config" hx-swap="innerHTML">
+                  <option value="ping">Ping</option>
+                  <option value="http">HTTP</option>
+                </select>
+              </div>
+            </div>
+            <span id="check-config"></span>
+            <div class="control">
+              <button class="button is-primary" hx-post="/edithost-addcheck" hx-include="#addcheck-form" hx-vals='{"host":"{{ .Name }}"}' hx-target="#modal" hx-swap="innerHTML">Add check</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+    <footer class="modal-card-foot" style="justify-content: space-between; width:100%">
+      <div>
+        <button class="button" hx-get="/close-modal" hx-target="#modal" hx-swap="innerHTML">Cancel</button>
+        <button class="button is-primary" hx-post="/edithost" hx-include="#edithost-form" hx-target="#modal" hx-swap="innerHTML">Save</button>
+      </div>
+      <div>
+        <button class="button is-danger is-light" hx-post="/delhost" hx-vals='{"name":"{{ .Name }}"}' hx-target="#modal" hx-swap="innerHTML">Delete</button>
+      </div>
+    </footer>
+  </div>
+</div>
+{{ end }}

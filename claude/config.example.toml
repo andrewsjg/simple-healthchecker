@@ -1,0 +1,74 @@
+# Health Checker Configuration Example (TOML)
+
+# Interval between health check runs (in seconds)
+check_interval = "60s"
+
+# Port for the web UI server
+web_server_port = 8080
+
+# Enable console logging of check results (default: false)
+enable_console_log = true
+
+# List of hosts to monitor
+[[hosts]]
+name = "Google DNS"
+address = "8.8.8.8"
+
+[[hosts.checks]]
+type = "ping"
+enabled = true
+timeout = "5s"
+# Optional: Add a unique healthcheck.io URL for this specific check
+# Sign up at https://healthcheck.io and get your unique URL
+healthcheck_io_url = "https://hc-ping.com/your-uuid-1"
+
+[[hosts]]
+name = "Cloudflare DNS"
+address = "1.1.1.1"
+
+[[hosts.checks]]
+type = "ping"
+enabled = true
+timeout = "5s"
+healthcheck_io_url = "https://hc-ping.com/your-uuid-2"
+
+[[hosts]]
+name = "Local Router"
+address = "192.168.1.1"
+
+[[hosts.checks]]
+type = "ping"
+enabled = true
+timeout = "3s"
+# No healthcheck_io_url means no notifications for this check
+
+[[hosts]]
+name = "Custom Server"
+address = "example.com"
+
+[[hosts.checks]]
+type = "ping"
+enabled = false
+timeout = "5s"
+healthcheck_io_url = "https://hc-ping.com/your-uuid-3"
+
+[[hosts.checks]]
+type = "http"
+enabled = true
+timeout = "10s"
+healthcheck_io_url = "https://hc-ping.com/your-uuid-4"
+[hosts.checks.options]
+url = "https://example.com"
+expected_status = "200"
+
+[[hosts]]
+name = "API Endpoint"
+address = "api.github.com"
+
+[[hosts.checks]]
+type = "http"
+enabled = true
+timeout = "10s"
+[hosts.checks.options]
+url = "https://api.github.com/status"
+expected_status = "200"

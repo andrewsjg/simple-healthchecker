@@ -1,0 +1,24 @@
+{{ define "index.html" }}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Simple Healthchecker</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>.muted{color:#777}</style>
+</head>
+<body class="section">
+  <div class="container">
+    <h1 class="title">Simple Healthchecker Dashboard</h1>
+    <div class="mb-4">
+      <button class="button is-primary" hx-get="/addhost-form" hx-target="#modal" hx-swap="innerHTML">Add Host</button>
+    </div>
+    <div id="modal"></div>
+    <div id="hosts" class="container is-fluid" hx-get="/hosts" hx-trigger="load, every 5s" hx-swap="innerHTML">
+      {{ template "hosts.html" . }}
+    </div>
+  </div>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,10 @@
+{{ define "check_config_fragment.html" }}
+{{ if eq .Type "http" }}
+  <div class="control is-expanded">
+    <input class="input" name="url" placeholder="https://example.com/health" required>
+  </div>
+  <div class="control" style="flex: 0 0 auto;">
+    <input class="input" name="expect" type="number" value="200" min="100" max="599" style="width:7rem" title="Expected status">
+  </div>
+{{ end }}
+{{ end }}
