@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/andrewsjg/simple-healthchecker/claude/internal/config"
+	"github.com/andrewsjg/simple-healthchecker/claude/internal/sparkline"
 	"github.com/andrewsjg/simple-healthchecker/claude/pkg/models"
 )
 
@@ -27,21 +28,24 @@ type HostStatus struct {
 	Checks []CheckStatus
 }
 
-// CheckStatus represents a check with its last result
+// CheckStatus represents a check with its last result and latency history
 type CheckStatus struct {
 	models.Check
-	LastResult *models.CheckResult
+	LastResult       *models.CheckResult
+	LatencySparkline string
 }
 
 // Server represents the web server
 type Server struct {
-	config     *models.Config
-	configPath string
-	port       int
-	results    map[string]map[models.CheckType]*models.CheckResult
-	resultsMux sync.RWMutex
-	configMux  sync.RWMutex
-	templates  *template.Template
+	config          *models.Config
+	configPath      string
+	port            int
+	results         map[string]map[models.CheckType]*models.CheckResult
+	latencyHistory  map[string]map[models.CheckType][]time.Duration
+	maxHistorySize  int
+	resultsMux      sync.RWMutex
+	configMux       sync.RWMutex
+	templates       *template.Template
 }
 
 // NewServer creates a new web server
@@ -63,15 +67,17 @@ func NewServer(config *models.Config, configPath string, port int) (*Server, err
 	}
 
 	return &Server{
-		config:     config,
-		configPath: configPath,
-		port:       port,
-		results:    make(map[string]map[models.CheckType]*models.CheckResult),
-		templates:  tmpl,
+		config:         config,
+		configPath:     configPath,
+		port:           port,
+		results:        make(map[string]map[models.CheckType]*models.CheckResult),
+		latencyHistory: make(map[string]map[models.CheckType][]time.Duration),
+		maxHistorySize: 50, // Store last 50 measurements for sparkline
+		templates:      tmpl,
 	}, nil
 }
 
-// UpdateResult updates the result for a host/check
+// UpdateResult updates the result for a host/check and maintains latency history
 func (s *Server) UpdateResult(result models.CheckResult) {
 	s.resultsMux.Lock()
 	defer s.resultsMux.Unlock()
@@ -80,6 +86,21 @@ func (s *Server) UpdateResult(result models.CheckResult) {
 		s.results[result.Host] = make(map[models.CheckType]*models.CheckResult)
 	}
 	s.results[result.Host][result.CheckType] = &result
+
+	// Update latency history
+	if s.latencyHistory[result.Host] == nil {
+		s.latencyHistory[result.Host] = make(map[models.CheckType][]time.Duration)
+	}
+
+	history := s.latencyHistory[result.Host][result.CheckType]
+	history = append(history, result.Duration)
+
+	// Keep only the last maxHistorySize measurements
+	if len(history) > s.maxHistorySize {
+		history = history[len(history)-s.maxHistorySize:]
+	}
+
+	s.latencyHistory[result.Host][result.CheckType] = history
 }
 
 // Start starts the web server
@@ -150,6 +171,13 @@ func (s *Server) handleGetHosts(w http.ResponseWriter, r *http.Request) {
 			if hostResults, ok := s.results[host.Name]; ok {
 				if result, ok := hostResults[check.Type]; ok {
 					checkStatus.LastResult = result
+				}
+			}
+
+			// Generate sparkline from latency history
+			if historyMap, ok := s.latencyHistory[host.Name]; ok {
+				if history, ok := historyMap[check.Type]; ok && len(history) > 0 {
+					checkStatus.LatencySparkline = sparkline.Generate(history, 30)
 				}
 			}
 

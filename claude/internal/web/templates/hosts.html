@@ -43,6 +43,11 @@
                         <small style="color: #666; margin-left: 8px;">
                             {{.LastResult.Timestamp.Format "15:04:05"}} ({{.LastResult.Duration.Milliseconds}}ms)
                         </small>
+                        {{if .LatencySparkline}}
+                        <div style="margin-top: 6px; font-family: monospace; font-size: 1.2em; color: #4a90e2; letter-spacing: 1px;" title="Latency trend over last {{len .LatencySparkline}} checks">
+                            {{.LatencySparkline}}
+                        </div>
+                        {{end}}
                     {{else}}
                         <span class="status-badge status-disabled">NOT CHECKED YET</span>
                     {{end}}
